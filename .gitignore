@@ -1,2 +1,4 @@
 __py*
 *.log
+*.db
+*csv

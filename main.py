@@ -3,15 +3,24 @@ import pandas as pd
 import logging
 
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('dev/changelog.log')])
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+changelog_handler = logging.FileHandler('dev/changelog.log')
+error_handler = logging.FileHandler('dev/error.log')
 
 
-logging.basicConfig(level=logging.ERROR,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('dev/error.log')])
+changelog_handler.setLevel(logging.INFO)
+error_handler.setLevel(logging.ERROR)
 
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+changelog_handler.setFormatter(formatter)
+error_handler.setFormatter(formatter)
+
+logger.addHandler(changelog_handler)
+logger.addHandler(error_handler)
 
 def connect_to_db(db_name):
     """Connect to the database."""
@@ -182,12 +191,12 @@ def update_database(con, students_df, courses_df, jobs_df):
             'student_jobs': len(jobs_df),
             'students': len(students_df)
         }
-    
+
     except Exception as e:
         logging.error(f"Error updating the database")
         logging.error(e)
         return None
-
+        
 
 def load_to_csv(con, file_name):
     """Load a dataframe to a CSV file."""
@@ -221,10 +230,10 @@ def main():
             students_df = reorganize_student(students_df)
             validate_foreign_keys(students_df, courses_df, jobs_df)
 
-            con2 = connect_to_db('dev/cademycode_cleaned.db')
+            con2 = connect_to_db('dev/cademycode_updated.db')
             if con2:
                 update_database(con2, students_df, courses_df, jobs_df)
-                load_to_csv(con2, 'dev/cademycode_cleaned.csv')
+                load_to_csv(con2, 'dev/cademycode_updated.csv')
 
                 con2.commit()
                 con2.close()
